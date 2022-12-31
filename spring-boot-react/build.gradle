@@ -1,0 +1,57 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.6'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	id "com.github.node-gradle.node" version "3.5.0"
+}
+
+group = 'com.techinterface'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+node {
+
+	download = false
+
+	// identify working directory in project
+	workDir = file("${project.projectDir}/src/main/frontend-ui/demoapp/nodejs")
+
+	// NPM  work directory
+	npmWorkDir = file("${project.projectDir}/src/main/frontend-ui/demoapp/npm")
+
+	// node modules directory
+	nodeModulesDir = file("${project.projectDir}/src/main/frontend-ui/demoapp")
+}
+
+task appNpmInstall(type: NpmTask){
+	description = " read packge.json and install all jars"
+	workingDir = file("${project.projectDir}/src/main/frontend-ui/demoapp")
+	args =["install", "--debug"]
+}
+task appNpmBuild(type: NpmTask){
+	description = "Builds applciation for your frontend "
+	workingDir =  file("${project.projectDir}/src/main/frontend-ui/demoapp")
+	args =["run", "build"]
+}
+task copyToFrontend(type: Copy){
+	from "$projectDir/src/main/frontend-ui/demoapp/build/"
+	into "$buildDir/resources/main/static"
+}
+
+ appNpmBuild.dependsOn appNpmInstall
+ copyToFrontend.dependsOn appNpmBuild
+ compileJava.dependsOn copyToFrontend
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
